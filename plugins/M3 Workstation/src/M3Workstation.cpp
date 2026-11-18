@@ -297,7 +297,7 @@ public:
                 std::istringstream in(text);
                 std::string line;
                 int added = 0;
-                while (added < 512 && std::getline(in, line))
+                while (added < 2048 && std::getline(in, line))
                 {
                     const size_t bar = line.find('|');
                     if (bar == std::string::npos || bar == 0) continue;

@@ -167,6 +167,36 @@ for t in tabs:
         e["handle remapping"]["map"] = [{"key": "Data", "value": "Parameter %d" % pidx[pn]}]
         e["bounds"]["bounds"] = "%d 40 46 38" % (1012 + i * 49); e["bounds"]["acceptsHWFocus"] = "No"
         comps.append(e)
+    # Segment labels: the generated page-level Label components did not draw on an MPC X (2026-11-18, device photo),
+    # so each switch gets its own copy of the radio definition with the label baked into the segment images.
+    defs = {e["key"]: e for e in pd["componentDefinitions"]["localComponentDefinitions"]}
+    keep = []
+    for c in comps:
+        ty = c["componentData"]["type"]
+        if ty.startswith("radio") and ty in defs:
+            nm = c["componentData"]["name"]
+            labels = {int(l["componentData"]["name"].rsplit(" ", 1)[1]): l["componentData"]["data"].get("text", "")
+                      for l in comps if l["componentData"]["type"] == "Label" and l["componentData"]["name"].startswith(nm + " seg ")}
+            slugn = "".join(ch if ch.isalnum() else "_" for ch in nm).lower()
+            key = ty + "_" + slugn
+            if key not in defs:
+                nd = copy.deepcopy(defs[ty]["value"])
+                for ch_ in nd["componentsData"]:
+                    if ch_["componentData"]["type"] != "Button": continue
+                    i = ch_["componentData"]["data"]["buttonId"]
+                    for state in ("on", "off"):
+                        src = os.path.join(out, os.path.basename(ch_["componentData"]["data"][state + "Image"]))
+                        im = Image.open(src).convert("RGBA"); d = ImageDraw.Draw(im)
+                        txt = labels.get(i, ""); size = 22
+                        while size > 10 and d.textlength(txt, font=F(FB, size)) > im.width - 8: size -= 1
+                        f = F(FB, size); tw = d.textlength(txt, font=f)
+                        d.text(((im.width - tw) / 2, (im.height - size) / 2 - 2), txt, font=f, fill=(255, 255, 255) if state == "on" else TXT)
+                        fn_ = "seg_%s_%d_%s.png" % (slugn, i, state); im.save(os.path.join(out, fn_))
+                        ch_["componentData"]["data"][state + "Image"] = fn_
+                pd["componentDefinitions"]["localComponentDefinitions"].append({"key": key, "value": nd}); defs[key] = {"key": key, "value": nd}
+            c["componentData"]["type"] = key
+    seglabel = lambda c: c["componentData"]["type"] == "Label" and " seg " in c["componentData"]["name"]
+    comps[:] = [c for c in comps if not seglabel(c)]
     fn = "bg_%s.png" % t["tabName"].lower(); background(t, names, slot).save(os.path.join(out, fn))
     for k in ("focussed", "unfocussed"): t["componentDefinition"]["backgroundData"][k]["image"] = fn
 json.dump(tui, open(os.path.join(out, "TUI.json"), "w"), indent=1)

@@ -7,7 +7,7 @@ oscillator-2 interval/detune (Double programs), arpeggiator on/off and direction
 What does NOT: the sound itself. Triton PCM programs point at samples in the Triton's ROM/RAM (not in the PCG), so the
 preset uses the plugin's own oscillators. Effects, modulation routings and tempo-sync are not mapped. Treat every
 converted preset as a starting point, not a copy.
-usage: triton_to_m3.py OUT.m3p FILE.PCG [FILE.PCG ...]   (max 512 programs per output)"""
+usage: triton_to_m3.py OUT.m3p FILE.PCG [FILE.PCG ...]   (max 2048 programs per output)"""
 import math, sys, os
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import triton_program as TP, triton_moss as TM
@@ -66,15 +66,18 @@ def from_moss(p):
 
 def convert(path):
     out = []
-    for p in TP.read_programs(path): out.append(from_pcm(p))
-    for p in TM.read_programs(path): out.append(from_moss(p))
+    # Slots with no name are empty in the bank (seen: the last 64 of the Triton LE factory PCG) and are skipped.
+    for p in TP.read_programs(path):
+        if p["name"].strip(): out.append(from_pcm(p))
+    for p in TM.read_programs(path):
+        if p["name"].strip(): out.append(from_moss(p))
     return out
 
 def fmt(x): return ("%.4g" % x)
 if __name__ == "__main__":
     out = sys.argv[1]; items = []
     for f in sys.argv[2:]: items += convert(f)
-    items = items[:512]
+    items = items[:2048]
     os.makedirs(os.path.dirname(os.path.abspath(out)), exist_ok=True)
     with open(out, "w") as fh:
         for name, v in items:

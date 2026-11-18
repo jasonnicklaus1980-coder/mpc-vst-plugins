@@ -119,7 +119,7 @@ Programs 8 and up are 116 original presets across 19 categories (Piano, Electric
 
 ## Importing Triton programs as presets
 
-1. `python3 tools/triton_to_m3.py Content/Presets/user.m3p BANK.PCG [MORE.PCG ...]` decodes Triton PCM programs (540-byte) and Triton MOSS programs (604-byte, EXB-MOSS) and writes up to 512 approximate presets.
+1. `python3 tools/triton_to_m3.py Content/Presets/user.m3p BANK.PCG [MORE.PCG ...]` decodes Triton PCM programs (540-byte) and Triton MOSS programs (604-byte, EXB-MOSS) and writes up to 2048 approximate presets (programs with no name are empty slots and are skipped).
 2. Put `Content/Presets/user.m3p` next to the plugin's other Content. The plugin loads it at start-up (after the 116 factory presets); no rebuild is needed. Lines that are malformed are skipped.
 
 **Approximate by design.** Triton PCM programs point at samples in the Triton's own ROM or RAM, which a PCG does not contain, so the preset uses this plugin's oscillators. What carries over: amp envelope (times use an approximate curve), filter cutoff (floored at 150 Hz), resonance, type, envelope amount and key tracking, the strongest LFO routing, oscillator-2 interval and detune, arpeggiator on/off, direction, octave range and gate (attack is capped at 40 ms when the arpeggiator is on), and drum mode. Effects, modulation matrix routings and tempo sync are not mapped. Converted presets are not level-matched.
@@ -131,3 +131,7 @@ Programs 8 and up are 116 original presets across 19 categories (Piano, Electric
 On a computer: build the plugin, put the file in `Content/Presets/user.m3p`, then
 `CAL_OUT=cal.tsv render_test m3-workstation.so userpresets` and `python3 tools/level_match.py user.m3p cal.tsv user_matched.m3p`.
 This uses the same rule as the factory bank (rms about 0.07, peak at most 0.5). Volume tops out at +6 dB, so very dark or slow-attack sounds can stay quieter than the rest.
+
+### Skin note (device, MPC X, 2026-11-18)
+
+On the first run on an MPC X the switch segments (Source, Filter Type, LFO Shape and so on) showed no text: the page-level label components the generator adds did not draw. `tools/make_skin.py` now gives each switch its own copy of the switch definition with the text drawn into the segment images. Not yet re-checked on the device.
