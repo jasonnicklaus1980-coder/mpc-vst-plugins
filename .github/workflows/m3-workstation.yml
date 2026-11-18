@@ -1,0 +1,57 @@
+# Builds M3 Workstation (plugins/M3 Workstation) for the MPC with the inMusic MPC Plugin Builder SDK.
+# This repo's own tools are not used: the plugin is written against the inMusic SDK (framework/mpc_plugin.h).
+# Output: an artifact with the installable zip (arm32 for MPC X/Live/One, arm64 for newer units).
+name: M3 Workstation build
+
+on:
+  push:
+    branches: [m3-workstation]
+    paths: ["plugins/M3 Workstation/**", ".github/workflows/m3-workstation.yml"]
+  workflow_dispatch:
+
+env:
+  SDK_REPO: https://github.com/inmusic-software/mpc-plugin-builder-sdk
+  SDK_REF: febd2ca5bd9eb16c4a412837196e145566bc981b   # the SDK commit the plugin was developed and tested against
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Get the inMusic SDK (pinned)
+        run: |
+          set -e
+          git init -q sdk && cd sdk
+          git remote add origin "$SDK_REPO"
+          git fetch -q --depth 1 origin "$SDK_REF"
+          git checkout -q FETCH_HEAD
+          cp -r "../plugins/M3 Workstation" plugins/
+      - name: Build native, arm32 and arm64 (zig toolchain)
+        working-directory: sdk
+        run: python tools/build.py "plugins/M3 Workstation" --target all
+      - name: SDK host test
+        working-directory: sdk
+        run: ./.sdk-tools/host_sim "plugins/M3 Workstation/build/native/m3-workstation.so" test
+      - name: Render tests (every factory preset)
+        working-directory: sdk/plugins/M3 Workstation
+        run: |
+          set -e
+          g++ -std=c++17 -o render_test test/render_test.cpp -ldl
+          mkdir -p "$RUNNER_TEMP/empty"
+          MPC_PLUGIN_FOLDER="$RUNNER_TEMP/empty" ./render_test build/native/m3-workstation.so presets
+      - name: Check the ARM files exist
+        working-directory: sdk/plugins/M3 Workstation
+        run: |
+          set -e
+          ls -la "build/Shannon - VST - M3 Workstation/VST/"
+          file "build/Shannon - VST - M3 Workstation/VST/"*.so
+      - name: Package
+        working-directory: sdk
+        run: python tools/package.py "plugins/M3 Workstation" --out dist
+      - uses: actions/upload-artifact@v4
+        with:
+          name: m3-workstation-mpc
+          path: sdk/dist/*.zip
