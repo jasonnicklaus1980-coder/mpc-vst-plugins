@@ -129,14 +129,14 @@ int main(int argc, char** argv)
 
     if (std::strcmp(argv[2], "content") == 0)
     {   // Every instrument in Content/Instruments: notes across the keyboard are finite, below full scale, and audible where mapped.
-        const int count = argc > 3 ? std::atoi(argv[3]) : 8;
+        const int count = argc > 3 ? std::atoi(argv[3]) : 32;
         for (int inst = 0; inst < count; ++inst)
         {
             int heard = 0, played = 0; double worst = 0;
             bool fin = true;
             for (int note = 24; note <= 108; note += 6)
             {
-                Plug p(m); p.program(kSamplePadProgram); p.param(kInstParam, inst / 7.0f); p.param(kLoopParam, 1.0f);
+                Plug p(m); p.program(kSamplePadProgram); p.param(kInstParam, inst / 31.0f); p.param(kLoopParam, 1.0f);
                 auto x = p.render(1.0, 0x90, note, 110);
                 fin = fin && finite(x);
                 double pk = 0; for (float f : x) pk = std::max(pk, (double)std::fabs(f));
@@ -205,11 +205,11 @@ int main(int argc, char** argv)
             CHECK(rms(r, 2.5, 3.0, sr) < 1e-4, "note off releases to silence: rms %.6f", rms(r, 2.5, 3.0, sr));
         }
         { // second instrument: zone 60..72, root 66, +100 cents
-            Plug p(m); p.program(kSamplePadProgram); p.param(kInstParam, 1.0f / 7.0f);
+            Plug p(m); p.program(kSamplePadProgram); p.param(kInstParam, 1.0f / 31.0f);
             auto in = p.render(2.0, 0x90, 66, 127);
             double f = freq(in, 0.4, 0.9, sr), expect = 440.0 * std::pow(2.0, 100.0 / 1200.0);
             CHECK(std::fabs(f - expect) / expect < 0.01, "instrument 2, +100 cents tune: %.1f Hz (expected %.1f)", f, expect);
-            Plug q(m); q.program(kSamplePadProgram); q.param(kInstParam, 1.0f / 7.0f);
+            Plug q(m); q.program(kSamplePadProgram); q.param(kInstParam, 1.0f / 31.0f);
             auto out = q.render(1.5, 0x90, 40, 127);
             CHECK(rms(out, 0.0, 1.5, sr) < 1e-6, "note outside the zone is silent (rms %.8f)", rms(out, 0.0, 1.5, sr));
         }

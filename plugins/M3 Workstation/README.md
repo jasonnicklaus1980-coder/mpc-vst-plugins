@@ -37,7 +37,7 @@ Init, Pad, Pluck, Bass, Lead.
 
 The SAMPLE page switches the voices from the oscillators to multisample playback.
 
-- **Source**: Synth or Sample. **Instrument**: 1-8, the instruments listed in `Content/Instruments/index.txt`.
+- **Source**: Synth or Sample. **Instrument**: 1-32, the instruments listed in `Content/Instruments/index.txt`, in that order.
   **Loop**: use the sample's loop points (off = play once).
 - Samples are mono or stereo WAV (stereo is mixed to mono), 4-point Hermite interpolation, any sample rate.
   Pitch follows the key, root note, and per-region tune (cents). Keys with no sample stay silent.
@@ -119,7 +119,7 @@ Programs 8 and up are 116 original presets across 19 categories (Piano, Electric
 
 ## Importing Triton programs as presets
 
-1. `python3 tools/triton_to_m3.py Content/Presets/user.m3p BANK.PCG [MORE.PCG ...]` decodes Triton PCM programs (540-byte) and Triton MOSS programs (604-byte, EXB-MOSS) and writes up to 2048 approximate presets (programs with no name are empty slots and are skipped).
+1. `python3 tools/triton_to_m3.py Content/Presets/user.m3p [TAG=]BANK.PCG [...]` (for example `RO4=ROSE4.PCG`) decodes Triton PCM programs (540-byte) and Triton MOSS programs (604-byte, EXB-MOSS) and writes up to 4096 approximate presets (empty slots and factory-blank "InitlProgram" slots are skipped).
 2. Put `Content/Presets/user.m3p` next to the plugin's other Content. The plugin loads it at start-up (after the 116 factory presets); no rebuild is needed. Lines that are malformed are skipped.
 
 **Approximate by design.** Triton PCM programs point at samples in the Triton's own ROM or RAM, which a PCG does not contain, so the preset uses this plugin's oscillators. What carries over: amp envelope (times use an approximate curve), filter cutoff (floored at 150 Hz), resonance, type, envelope amount and key tracking, the strongest LFO routing, oscillator-2 interval and detune, arpeggiator on/off, direction, octave range and gate (attack is capped at 40 ms when the arpeggiator is on), and drum mode. Effects, modulation matrix routings and tempo sync are not mapped. Converted presets are not level-matched.
@@ -135,3 +135,11 @@ This uses the same rule as the factory bank (rms about 0.07, peak at most 0.5). 
 ### Skin note (device, MPC X, 2026-11-18)
 
 On the first run on an MPC X the switch segments (Source, Filter Type, LFO Shape and so on) showed no text: the page-level label components the generator adds did not draw. `tools/make_skin.py` now gives each switch its own copy of the switch definition with the text drawn into the segment images. Not yet re-checked on the device.
+
+### Preset names
+
+VST2 programs are one flat list (no folders), so converted names carry their group: `TAG CAT Name`, for example `RO4 GTR Picking like Rai`. TAG is the bank you gave on the command line; CAT is the Triton program category (KEY ORG BEL STR VOX BRS WND GTR BAS SLO FST LED MOT SFX HIT DRM, in Korg's order 0-15; the order was checked against the Rose IV author's own category list, which matched for all 15 categories it uses). Within a bank, presets are grouped by category. Names are at most 24 characters (the VST2 limit).
+
+### More sample instruments (1.2.0)
+
+Up to 32 sampled instruments (Instrument 1-32, in `Content/Instruments/index.txt` order). `korg_samples.py export FILE.KMP CONTENT_DIR NAME` takes an optional name, for sets whose multisamples all carry the same placeholder name (seen: six sets all named `NewMS______000`). Very quiet source recordings can be peak-normalised after export (a gain change only).

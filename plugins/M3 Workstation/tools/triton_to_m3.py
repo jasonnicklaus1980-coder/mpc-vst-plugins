@@ -7,7 +7,8 @@ oscillator-2 interval/detune (Double programs), arpeggiator on/off and direction
 What does NOT: the sound itself. Triton PCM programs point at samples in the Triton's ROM/RAM (not in the PCG), so the
 preset uses the plugin's own oscillators. Effects, modulation routings and tempo-sync are not mapped. Treat every
 converted preset as a starting point, not a copy.
-usage: triton_to_m3.py OUT.m3p FILE.PCG [FILE.PCG ...]   (max 2048 programs per output)"""
+usage: triton_to_m3.py OUT.m3p [TAG=]FILE.PCG [[TAG=]FILE.PCG ...]   (max 4096 programs per output)
+Names become "TAG CAT Name" (TAG: up to 3 characters for the bank, CAT: the Triton category), grouped by bank then category."""
 import math, sys, os
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import triton_program as TP, triton_moss as TM
@@ -64,20 +65,31 @@ def from_moss(p):
     if p["arp"]["on"]: v.update(arpon=1, atk=min(v["atk"], 40))
     return name, v
 
-def convert(path):
+# Triton program categories 0..15 (checked against the Rose IV author's category list: all 15 that occur there match).
+CATS = ["KEY", "ORG", "BEL", "STR", "VOX", "BRS", "WND", "GTR", "BAS", "SLO", "FST", "LED", "MOT", "SFX", "HIT", "DRM"]
+CAT_NAMES = ["Keyboard", "Organ", "Bell/Mallet", "Strings", "Vocal/Airy", "Brass", "Woodwind/Reed", "Guitar/Plucked", "Bass",
+             "Slow Synth", "Fast Synth", "Lead Synth", "Motion Synth", "SE", "Hit/Arpg", "Drums"]
+
+def convert(path, tag=""):
     out = []
     # Slots with no name are empty in the bank (seen: the last 64 of the Triton LE factory PCG) and are skipped.
-    for p in TP.read_programs(path):
-        if p["name"].strip(): out.append(from_pcm(p))
-    for p in TM.read_programs(path):
-        if p["name"].strip(): out.append(from_moss(p))
-    return out
+    progs = [(p, from_pcm) for p in TP.read_programs(path)] + [(p, from_moss) for p in TM.read_programs(path)]
+    for p, conv in progs:
+        if not p["name"].strip() or p["name"].lower().startswith("initlprog"): continue   # empty / factory-blank slots
+        name, v = conv(p); c = p["category"] & 15
+        label = " ".join(x for x in (tag, CATS[c], p["name"].strip()) if x)[:24]
+        out.append((c, label, v))
+    out.sort(key=lambda t: t[0])                    # stable: bank order kept, grouped by category
+    return [(label, v) for c, label, v in out]
 
 def fmt(x): return ("%.4g" % x)
 if __name__ == "__main__":
     out = sys.argv[1]; items = []
-    for f in sys.argv[2:]: items += convert(f)
-    items = items[:2048]
+    for a in sys.argv[2:]:
+        tag, _, f = a.partition("=") if ("=" in a and not os.path.exists(a)) else ("", "", a)
+        assert len(tag) <= 3 and "|" not in tag, tag
+        items += convert(f, tag.upper())
+    items = items[:4096]
     os.makedirs(os.path.dirname(os.path.abspath(out)), exist_ok=True)
     with open(out, "w") as fh:
         for name, v in items:

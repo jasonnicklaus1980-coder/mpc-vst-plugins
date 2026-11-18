@@ -55,7 +55,7 @@ struct Instrument
 class SampleBank
 {
 public:
-    static constexpr int    kMaxInstruments = 8;
+    static constexpr int    kMaxInstruments = 32;
     static constexpr size_t kMaxBytes = 48u * 1024u * 1024u;   // float samples across all instruments
 
     // Returns the number of instruments loaded (0 if Content/Instruments/index.txt is absent).

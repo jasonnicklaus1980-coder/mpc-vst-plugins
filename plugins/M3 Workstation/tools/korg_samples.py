@@ -15,7 +15,7 @@ Usage:
   python3 -I korg_samples.py info  FILE.KSF|FILE.KMP|FILE.KSC
   python3 -I korg_samples.py wav   FILE.KSF out.wav
   python3 -I korg_samples.py keymap FILE.KMP out.json        (looks for KSF files beside the KMP)
-  python3 -I korg_samples.py export FILE.KMP CONTENT_DIR     (WAVs + Instruments/<slug>.map + index.txt for the M3 plugin)
+  python3 -I korg_samples.py export FILE.KMP CONTENT_DIR [NAME]  (WAVs + Instruments/<slug>.map + index.txt for the M3 plugin; NAME overrides the KMP's own name)
 """
 import json, os, struct, sys, wave
 
@@ -115,13 +115,14 @@ def slug(name):
     return "-".join(p for p in out.split("-") if p) or "instrument"
 
 
-def export_kmp(kmp_path, content_dir):
+def export_kmp(kmp_path, content_dir, name_override=None):
     """Write WAVs and a plain-text keymap that the plugin loads from its Content/ folder.
     Map format:  region <wav path under Content/> <low> <top> <root> <tune> <level> <pan> <loopStart> <loopEnd>
     (loop points are sample frames in the WAV; loopEnd <= loopStart means no loop)."""
     kmp = read_kmp(kmp_path)
     base = os.path.dirname(os.path.abspath(kmp_path))
     folder = os.path.join(base, os.path.splitext(os.path.basename(kmp_path))[0])
+    if name_override: kmp["name"] = name_override        # sets whose multisamples all carry the same placeholder name
     name = slug(kmp["name"])
     wav_dir = os.path.join(content_dir, "Samples", name)
     os.makedirs(wav_dir, exist_ok=True)
@@ -183,7 +184,7 @@ def main(argv):
                     r["wav"] = os.path.splitext(r["sample"])[0] + ".wav"; break
         json.dump(kmp, open(argv[3], "w"), indent=1)
     elif cmd == "export":
-        mp, skipped = export_kmp(path, argv[3])
+        mp, skipped = export_kmp(path, argv[3], argv[4] if len(argv) > 4 else None)
         print("wrote", mp)
         for sname, why in skipped:
             print("  skipped", sname, "-", why)

@@ -52,7 +52,7 @@ enum ParamIndex
     kSustain,      // 0..100 %
     kRelease,      // ms
     kSource,       // choice: Synth / Sample
-    kInstrument,   // 1..8: which loaded multisample instrument (Sample source)
+    kInstrument,   // 1..32: which loaded multisample instrument (Sample source), in Content/Instruments/index.txt order
     kLoop,         // bool: use the sample's loop points
     kFilterType,   // choice: Lowpass / Highpass / Bandpass / Notch
     kKeyTrack,     // 0..100 %: cutoff follows the key (100 % = one octave per octave, around middle C)
@@ -239,7 +239,7 @@ public:
         addParam(mpc::floatParam("sustain", "Sustain",    0.0f, 100.0f, 70.0f, "%", 0));
         addParam(mpc::logParam  ("release", "Release",    1.0f, 5000.0f, 300.0f, "ms", 0));
         addParam(mpc::choiceParam("source", "Source",     {"Synth", "Sample", "Drum"}, 0));
-        addParam(mpc::intParam  ("inst",    "Instrument", 1, 8, 1, ""));
+        addParam(mpc::intParam  ("inst",    "Instrument", 1, 32, 1, ""));
         addParam(mpc::boolParam ("loop",    "Loop", true));
         addParam(mpc::choiceParam("ftype",  "Filter Type", {"Lowpass", "Highpass", "Bandpass", "Notch"}, 0));
         addParam(mpc::floatParam("ktrack",  "Key Track",  0.0f, 100.0f, 0.0f, "%", 0));
@@ -297,7 +297,7 @@ public:
                 std::istringstream in(text);
                 std::string line;
                 int added = 0;
-                while (added < 2048 && std::getline(in, line))
+                while (added < 4096 && std::getline(in, line))
                 {
                     const size_t bar = line.find('|');
                     if (bar == std::string::npos || bar == 0) continue;
@@ -309,7 +309,7 @@ public:
                     bool ok = true;
                     for (float f : vals) ok = ok && std::isfinite(f);
                     if (!ok) continue;
-                    userNames_.push_back(line.substr(0, std::min<size_t>(bar, 23)));
+                    userNames_.push_back(line.substr(0, std::min<size_t>(bar, 24)));
                     addProg(userNames_.back().c_str(), vals);
                     ++added;
                 }
