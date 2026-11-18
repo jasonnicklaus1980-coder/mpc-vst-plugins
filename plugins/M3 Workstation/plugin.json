@@ -1,0 +1,17 @@
+{
+  "name": "M3 Workstation",
+  "manufacturer": "Shannon",
+  "version": "1.0.0",
+  "format": "vst2",
+  "kind": "instrument",
+  "uid": "S5OY",
+  "numInputs": 0,
+  "numOutputs": 2,
+  "category": "Synth",
+  "file32": "VST/m3-workstation-arm32.so",
+  "file64": "VST/m3-workstation-arm64.so",
+  "description": "M3 Workstation: a 12-voice synth and sample player for the MPC. Loads converted Korg KSF/KMP samples. Original sounds; no Korg content.",
+  "author": "Shannon",
+  "url": "",
+  "license": "MIT"
+}

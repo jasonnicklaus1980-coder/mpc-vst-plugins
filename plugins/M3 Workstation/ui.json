@@ -1,0 +1,247 @@
+{
+  "kit": {
+    "theme": "cyan",
+    "accent": "ff4f9cf0"
+  },
+  "pages": [
+    {
+      "name": "SOURCE",
+      "controls": [
+        {
+          "param": "Source",
+          "widget": "switch"
+        },
+        {
+          "param": "Instrument",
+          "widget": "knob"
+        },
+        {
+          "param": "Loop",
+          "widget": "switch"
+        },
+        {
+          "param": "Volume",
+          "widget": "fader"
+        }
+      ]
+    },
+    {
+      "name": "OSC",
+      "controls": [
+        {
+          "param": "Osc1 Wave",
+          "widget": "switch"
+        },
+        {
+          "param": "Osc2 Wave",
+          "widget": "switch"
+        },
+        {
+          "param": "Osc2 Semi",
+          "widget": "knob",
+          "polarity": "bipolar"
+        },
+        {
+          "param": "Osc2 Detune",
+          "widget": "knob",
+          "polarity": "bipolar"
+        },
+        {
+          "param": "Osc Mix",
+          "widget": "fader"
+        },
+        "empty",
+        "empty",
+        "empty"
+      ]
+    },
+    {
+      "name": "FILTER",
+      "controls": [
+        {
+          "param": "Cutoff",
+          "widget": "knob"
+        },
+        {
+          "param": "Resonance",
+          "widget": "knob"
+        },
+        {
+          "param": "Filter Env",
+          "widget": "knob",
+          "polarity": "bipolar"
+        },
+        {
+          "param": "Key Track",
+          "widget": "knob"
+        },
+        {
+          "param": "Filter Type",
+          "widget": "switch"
+        },
+        "empty",
+        "empty",
+        "empty"
+      ]
+    },
+    {
+      "name": "ENV",
+      "controls": [
+        {
+          "param": "Attack",
+          "widget": "fader"
+        },
+        {
+          "param": "Decay",
+          "widget": "fader"
+        },
+        {
+          "param": "Sustain",
+          "widget": "fader"
+        },
+        {
+          "param": "Release",
+          "widget": "fader"
+        }
+      ]
+    },
+    {
+      "name": "LFO",
+      "controls": [
+        {
+          "param": "LFO Shape",
+          "widget": "switch"
+        },
+        {
+          "param": "LFO Rate",
+          "widget": "knob"
+        },
+        {
+          "param": "LFO Depth",
+          "widget": "knob"
+        },
+        {
+          "param": "LFO Dest",
+          "widget": "switch"
+        },
+        {
+          "param": "LFO On",
+          "widget": "switch"
+        },
+        "empty",
+        "empty",
+        "empty"
+      ]
+    },
+    {
+      "name": "FX",
+      "controls": [
+        {
+          "param": "Chorus Mix",
+          "widget": "knob"
+        },
+        {
+          "param": "Delay Mix",
+          "widget": "knob"
+        },
+        {
+          "param": "Delay Time",
+          "widget": "knob"
+        },
+        {
+          "param": "Delay Feedback",
+          "widget": "knob"
+        },
+        {
+          "param": "Reverb Mix",
+          "widget": "knob"
+        },
+        {
+          "param": "Reverb Size",
+          "widget": "knob"
+        },
+        "empty",
+        "empty"
+      ]
+    },
+    {
+      "name": "ARP",
+      "controls": [
+        {
+          "param": "Arp On",
+          "widget": "switch"
+        },
+        {
+          "param": "Arp Mode",
+          "widget": "knob"
+        },
+        {
+          "param": "Arp Rate",
+          "widget": "knob"
+        },
+        {
+          "param": "Arp Latch",
+          "widget": "switch"
+        }
+      ]
+    },
+    {
+      "name": "ARP 2",
+      "controls": [
+        {
+          "param": "Arp Gate",
+          "widget": "knob"
+        },
+        {
+          "param": "Arp Octaves",
+          "widget": "knob"
+        },
+        {
+          "param": "Arp Swing",
+          "widget": "knob"
+        },
+        "empty"
+      ]
+    },
+    {
+      "name": "DRUM",
+      "controls": [
+        {
+          "param": "Drum Kit",
+          "widget": "switch"
+        },
+        {
+          "param": "Drum Tune",
+          "widget": "knob",
+          "polarity": "bipolar"
+        },
+        {
+          "param": "Drum Decay",
+          "widget": "knob"
+        },
+        "empty"
+      ]
+    },
+    {
+      "name": "COMBI",
+      "controls": [
+        {
+          "param": "Mode",
+          "widget": "switch"
+        },
+        {
+          "param": "Combination",
+          "widget": "knob"
+        },
+        "empty",
+        "empty"
+      ]
+    }
+  ],
+  "style": {
+    "background": "ff1e1d1e",
+    "accent": "ff4f9cf0",
+    "text": "ffffffff",
+    "muted": "ff6a6a6c"
+  }
+}
