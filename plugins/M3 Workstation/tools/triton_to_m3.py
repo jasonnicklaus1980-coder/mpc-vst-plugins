@@ -9,7 +9,7 @@ preset uses the plugin's own oscillators. Effects, modulation routings and tempo
 converted preset as a starting point, not a copy.
 usage: triton_to_m3.py OUT.m3p [TAG=]FILE.PCG [[TAG=]FILE.PCG ...]   (max 4096 programs per output)
 Names become "TAG CAT Name" (TAG: up to 3 characters for the bank, CAT: the Triton category), grouped by bank then category."""
-import math, sys, os
+import json, math, sys, os
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import triton_program as TP, triton_moss as TM
 ORDER = ["vol","osc1","osc2","semi","detune","mix","cutoff","reso","fenv","atk","dec","sus","rel","source","inst","loop","ftype","ktrack",
@@ -70,13 +70,33 @@ CATS = ["KEY", "ORG", "BEL", "STR", "VOX", "BRS", "WND", "GTR", "BAS", "SLO", "F
 CAT_NAMES = ["Keyboard", "Organ", "Bell/Mallet", "Strings", "Vocal/Airy", "Brass", "Woodwind/Reed", "Guitar/Plucked", "Bass",
              "Slow Synth", "Fast Synth", "Lead Synth", "Motion Synth", "SE", "Hit/Arpg", "Drums"]
 
+# Effect amounts by category, applied only where the converter left a value at 0 (Triton effects are not mapped).
+# Bass, drums and hits stay dry on purpose.
+FX = {
+    "KEY": dict(revmix=20, revsize=50, chorus=15), "ORG": dict(revmix=15, revsize=50, chorus=20),
+    "BEL": dict(revmix=25, revsize=60), "STR": dict(revmix=25, revsize=60, chorus=10),
+    "VOX": dict(revmix=30, revsize=70), "BRS": dict(revmix=15, revsize=40),
+    "WND": dict(revmix=25, revsize=60), "GTR": dict(revmix=12, revsize=40, chorus=15),
+    "BAS": {}, "SLO": dict(revmix=30, revsize=70, dlymix=15), "FST": dict(revmix=12, revsize=40, dlymix=8),
+    "LED": dict(revmix=15, revsize=50, dlymix=12), "MOT": dict(revmix=25, revsize=60, dlymix=12, chorus=15),
+    "SFX": dict(revmix=30, revsize=70, dlymix=20), "HIT": {}, "DRM": {},
+}
+
 def convert(path, tag=""):
     out = []
     # Slots with no name are empty in the bank (seen: the last 64 of the Triton LE factory PCG) and are skipped.
+    # Unused slots that copy one template (seen: 125 of 128 in the TR-808 bank) are dropped; a program is dropped only if it is an exact copy of another.
     progs = [(p, from_pcm) for p in TP.read_programs(path)] + [(p, from_moss) for p in TM.read_programs(path)]
-    for p, conv in progs:
+    keys = [json.dumps(p, sort_keys=True, default=str) for p, _ in progs]
+    copies = {k: keys.count(k) for k in set(keys)}
+    for (p, conv), key in zip(progs, keys):
         if not p["name"].strip() or p["name"].lower().startswith("initlprog"): continue   # empty / factory-blank slots
+        if copies[key] > 1: continue            # a template copied into several slots: a placeholder, not a sound
         name, v = conv(p); c = p["category"] & 15
+        # A PCM program with every effect switched off in the source stays dry (e.g. the TR-808 kicks).
+        source_dry = conv is from_pcm and not p["ifx_on"][0] and not any(p["mfx_on"])
+        for k, val in ({} if source_dry else FX.get(CATS[c], {})).items():
+            if v.get(k, 0) == 0: v[k] = val
         label = " ".join(x for x in (tag, CATS[c], p["name"].strip()) if x)[:24]
         out.append((c, label, v))
     out.sort(key=lambda t: t[0])                    # stable: bank order kept, grouped by category
